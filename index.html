@@ -2,70 +2,78 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Incentive Calculation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tyson Incentive Calculator</title>
   <style>
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #005151;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #990000;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      color: black;
     }
 
     #tile {
       width: 90%;
-      max-width: 400px;
-      padding: 20px;
-      background-color: rgba(220, 242, 240, 1);
-      border-radius: 12px;
-      box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.3);
+      max-width: 420px;
+      background-color: #fff8f0;
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
       text-align: center;
       color: #333;
       box-sizing: border-box;
     }
 
+    #tile img {
+      max-width: 120px;
+      margin-bottom: 15px;
+    }
+
     #tile h1 {
-      font-size: 24px;
-      color: black;
-      margin-bottom: 10px;
+      font-size: 22px;
+      color: #990000;
+      margin-bottom: 20px;
+    }
+
+    .input-group {
+      margin-bottom: 15px;
+      text-align: left;
+    }
+
+    .input-group label {
+      display: block;
+      font-weight: bold;
+      color: #990000;
+      margin-bottom: 5px;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #FDBB30;
+      border-radius: 8px;
+      font-size: 14px;
     }
 
     .main-button {
-      display: block;
-      width: 90%;
-      padding: 12px;
-      margin: 15px auto;
-      font-size: 16px;
+      background-color: #FDBB30;
+      color: #990000;
       font-weight: bold;
+      padding: 12px;
+      width: 100%;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      background-color: #30cebb;
-      color: black;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      margin-top: 10px;
+      font-size: 16px;
+      transition: all 0.3s ease;
     }
 
     .main-button:hover {
-      transform: scale(1.05);
-      box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
-    }
-
-    .section {
-      margin-top: 20px;
-    }
-
-    input[type="date"] {
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: 1px solid #DB0A5B;
-      width: 100%;
-      margin-bottom: 10px;
-      box-sizing: border-box;
+      background-color: #e6a800;
     }
 
     .toast {
@@ -73,47 +81,64 @@
       bottom: 30px;
       left: 50%;
       transform: translateX(-50%);
-      background-color: #333;
-      color: white;
-      padding: 12px 24px;
+      color: #fff;
+      padding: 14px 24px;
       border-radius: 8px;
       font-size: 14px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.5s ease-in-out;
+      display: none;
+      z-index: 1000;
+      font-weight: bold;
     }
 
-    .toast.show {
-      opacity: 1;
-      pointer-events: auto;
+    .toast.success {
+      background-color: #000000; /* Green */
+    }
+
+    .toast.error {
+      background-color: #000000; /* Red */
+    }
+
+    .powered-by {
+      font-size: 12px;
+      margin-top: 20px;
+      color: #990000;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
   <div id="tile">
-    <h1>Incentive Calculation</h1>
-    <div class="section">
-      <input type="date" id="start-date" placeholder="Start Date" />
-      <input type="date" id="end-date" placeholder="End Date" />
-      <button class="main-button" onclick="runCalculation()">Run Calculation</button>
+    <img src="https://www.tysonfoods.com/sites/default/files/inline-images/TFlogo_Full%20color_RGB%20copy_0.png" alt="Tyson Logo" />
+    <h1>Incentive Bonus Calculator</h1>
+
+    <div class="input-group">
+      <label for="start-date">Pay Period Start Date</label>
+      <input type="date" id="start-date">
     </div>
-    <p class="powered-by">Powered by: CloudApper AI</p>
+
+    <div class="input-group">
+      <label for="end-date">Pay Period End Date</label>
+      <input type="date" id="end-date">
+    </div>
+
+    <button class="main-button" onclick="runCalculation()">Run Incentive Calculation</button>
+
+    <p class="powered-by">Powered by CloudApper AI</p>
   </div>
 
   <div id="toast" class="toast"></div>
 
   <script>
     const toast = document.getElementById("toast");
-    const history = new Set(); // To track previously run date ranges
+    const runHistory = [];
 
-    function showToast(message, duration = 3000) {
-      toast.textContent = message;
-      toast.classList.add("show");
-      setTimeout(() => toast.classList.remove("show"), duration);
-    }
-
-    function formatDateRange(start, end) {
-      return `${start}|${end}`;
+    function showToast(message, type = "success", duration = 5000) {
+      toast.textContent = (type === "success" ? "✅ " : "❌ ") + message;
+      toast.className = `toast ${type}`;
+      toast.style.display = "block";
+      setTimeout(() => {
+        toast.style.display = "none";
+      }, duration);
     }
 
     function runCalculation() {
@@ -121,28 +146,23 @@
       const endDate = document.getElementById("end-date").value;
 
       if (!startDate || !endDate) {
-        showToast("Please select both start and end dates.");
+        showToast("Please select both start and end dates.", "error", 6000);
         return;
       }
 
-      if (new Date(endDate) < new Date(startDate)) {
-        showToast("End date cannot be before start date.");
+      const key = `${new Date(startDate).toISOString().split('T')[0]}|${new Date(endDate).toISOString().split('T')[0]}`;
+
+      if (runHistory.includes(key)) {
+        showToast("You've already run this pay period. Please choose a different one.", "error", 7000);
         return;
       }
 
-      const key = formatDateRange(startDate, endDate);
-
-      if (history.has(key)) {
-        showToast("You have already run the incentive calculation for this pay period, please run the incentive calcualtion for a different pay period.");
-        return;
-      }
-
-      showToast("The incentive calculation is in progress...");
+      runHistory.push(key);
+      showToast("Incentive calculation is in progress...", "success", 4000);
 
       setTimeout(() => {
-        history.add(key);
-        showToast("The calculation has been completed successfully and incentive bonus has been added in the employees' timecard");
-      }, 4000); // Simulate delay
+        showToast("Calculation completed. Bonuses have been added to timecards.", "success", 6000);
+      }, 4000);
     }
   </script>
 </body>
